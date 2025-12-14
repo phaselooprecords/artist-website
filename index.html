@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baris Balta | Interactive Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* --- 1. MINIMALIST VISUALS --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
+        }
+
+        /* The Hero Background (Your Picture) */
+        #bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* REPLACE THIS LINK WITH YOUR PROFILE PIC URL */
+            background-image: url('https://media-assets-blush.vercel.app/profile.png'); 
+            background-size: cover;
+            background-position: center;
+            opacity: 0.6;
+            z-index: -1;
+            transition: filter 0.5s ease;
+        }
+
+        /* The Overlay Content */
+        .container {
+            height: 200vh; /* Make page scrollable */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Section 1: Introduction */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 { font-size: 4rem; margin: 0; letter-spacing: 5px; text-transform: uppercase; mix-blend-mode: overlay; }
+        p { font-size: 1.2rem; margin-top: 20px; color: #ccc; }
+        
+        .start-btn {
+            margin-top: 40px;
+            padding: 15px 40px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .start-btn:hover { background: white; color: black; }
+
+        /* Section 2: The Sequencer (Appears on Scroll) */
+        .sequencer-section {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to top, #000 10%, transparent);
+        }
+
+        /* The Grid UI */
+        .sequencer-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr); /* 8 Steps */
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 60px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.1s;
+        }
+        
+        .step.active { background-color: #3d5a80; box-shadow: 0 0 10px #3d5a80; }
+        .step.playing { border-color: #fff; transform: scale(1.1); }
+
+        .controls { text-align: center; margin-bottom: 20px; }
+        .key-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-image"></div>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Baris Balta</h1>
+            <p>Music Producer // Audio Engineer</p>
+            <button class="start-btn" id="startBtn">INITIALIZE AUDIO ENGINE</button>
+            <p style="font-size: 0.8rem; margin-top: 50px; opacity: 0.6;">SCROLL DOWN TO MIX</p>
+        </div>
+
+        <div class="sequencer-section">
+            <h2>SEQUENCER LOOP</h2>
+            <div class="controls">
+                <span>KICK DRUM (8 Steps)</span>
+            </div>
+            <div class="sequencer-grid" id="grid-kick">
+                </div>
+            
+            <div class="controls" style="margin-top: 20px;">
+                <span>SNARE (8 Steps)</span>
+            </div>
+            <div class="sequencer-grid" id="grid-snare">
+                </div>
+        </div>
+    </div>
+
+    <div class="key-hint">
+        PRESS KEYS: <br>
+        [A] Kick | [S] Snare | [D] HiHat | [F] Bass
+    </div>
+
+    <script>
+        // --- 1. INITIALIZATION ---
+        let audioStarted = false;
+        const startBtn = document.getElementById('startBtn');
+        const bgImage = document.getElementById('bg-image');
+
+        // Define Instruments (Sampler)
+        // Using standard Tone.js URLs for now. You can replace these with your own Vercel links later!
+        const sampler = new Tone.Sampler({
+            urls: {
+                "C4": "kick.mp3",  // Mapped to 'A'
+                "D4": "snare.mp3", // Mapped to 'S'
+                "E4": "hihat.mp3", // Mapped to 'D'
+                "F4": "tom.mp3"    // Mapped to 'F'
+            },
+            baseUrl: "https://tonejs.github.io/audio/drum-samples/acoustic-kit/",
+            onload: () => {
+                console.log("Samples Loaded!");
+                startBtn.innerText = "CLICK TO ENTER";
+            }
+        }).toDestination();
+
+        // Background Pad (Simple Synth for Atmosphere)
+        const bgSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" },
+            envelope: { attack: 2, decay: 0.1, sustain: 0.3, release: 2 }
+        }).toDestination();
+        bgSynth.volume.value = -20; // Start quiet
+
+        // --- 2. START AUDIO CONTEXT ---
+        startBtn.addEventListener('click', async () => {
+            if (audioStarted) return;
+            await Tone.start();
+            audioStarted = true;
+            startBtn.style.display = 'none'; // Hide button
+            
+            // Play a startup chord
+            bgSynth.triggerAttackRelease(["C3", "E3", "G3"], "4n");
+            
+            // Start the Transport (The internal clock)
+            Tone.Transport.bpm.value = 120;
+            Tone.Transport.start();
+        });
+
+        // --- 3. KEYBOARD SAMPLER (A, S, D, F) ---
+        document.addEventListener('keydown', (e) => {
+            if (!audioStarted) return;
+            const key = e.key.toLowerCase();
+            
+            // Visual feedback
+            bgImage.style.filter = "brightness(1.5)";
+            setTimeout(() => bgImage.style.filter = "brightness(1)", 100);
+
+            switch(key) {
+                case 'a': sampler.triggerAttack("C4"); break; // Kick
+                case 's': sampler.triggerAttack("D4"); break; // Snare
+                case 'd': sampler.triggerAttack("E4"); break; // HiHat
+                case 'f': sampler.triggerAttack("F4"); break; // Tom
+            }
+        });
+
+        // --- 4. SCROLL INTERACTION ---
+        // As you scroll down, apply a lowpass filter to the "Atmosphere" or change volume
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            
+            // Calculate percentage scrolled (0 to 1)
+            const scrollPercent = Math.min(scrollY / windowHeight, 1);
+            
+            // Example: Fade out opacity of text or blur background
+            bgImage.style.filter = `blur(${scrollPercent * 10}px)`;
+        });
+
+        // --- 5. THE STEP SEQUENCER ---
+        const kickGrid = document.getElementById('grid-kick');
+        const snareGrid = document.getElementById('grid-snare');
+        
+        // Data model for the beat (8 steps)
+        let kickPattern = [0, 0, 0, 0, 0, 0, 0, 0]; 
+        let snarePattern = [0, 0, 0, 0, 0, 0, 0, 0];
+
+        // Create Grid UI Helper
+        function createGrid(container, patternArray) {
+            for (let i = 0; i < 8; i++) {
+                const step = document.createElement('div');
+                step.classList.add('step');
+                step.dataset.index = i;
+                step.addEventListener('click', () => {
+                    // Toggle state
+                    patternArray[i] = !patternArray[i]; 
+                    step.classList.toggle('active');
+                });
+                container.appendChild(step);
+            }
+        }
+
+        createGrid(kickGrid, kickPattern);
+        createGrid(snareGrid, snarePattern);
+
+        // The Sequencer Loop Logic
+        let currentStep = 0;
+        
+        Tone.Transport.scheduleRepeat((time) => {
+            // 1. Play Kick if active
+            if (kickPattern[currentStep]) {
+                sampler.triggerAttack("C4", time);
+            }
+            // 2. Play Snare if active
+            if (snarePattern[currentStep]) {
+                sampler.triggerAttack("D4", time);
+            }
+
+            // 3. Visual Feedback (Update UI)
+            Tone.Draw.schedule(() => {
+                // Remove 'playing' class from all steps
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('playing'));
+                
+                // Add 'playing' class to current step columns
+                kickGrid.children[currentStep].classList.add('playing');
+                snareGrid.children[currentStep].classList.add('playing');
+            }, time);
+
+            // Advance step (0-7)
+            currentStep = (currentStep + 1) % 8;
+
+        }, "8n"); // Eighth notes
+
+    </script>
+</body>
+</html>
