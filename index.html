@@ -20,12 +20,16 @@
             overflow-x: hidden;
         }
 
-        /* --- BACKGROUND IMAGE (Face Visible) --- */
+        /* --- BACKGROUND IMAGE FIX --- */
         #bg-image {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('https://media-assets-blush.vercel.app/profile.png'); 
             background-size: cover;
-            background-position: center 70%; /* MOVED DOWN */
+            background-repeat: no-repeat;
+            
+            /* FIXED: Anchors image to TOP so head is always visible */
+            background-position: center top; 
+            
             opacity: 0.8; z-index: -1;
             transition: filter 0.5s ease;
         }
@@ -48,6 +52,7 @@
             backdrop-filter: blur(10px);
             padding: 15px; border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
+            min-height: 100px;
         }
         .media-label { font-size: 0.7rem; color: #bbb; letter-spacing: 2px; margin-bottom: 8px; display: block; font-family: 'Courier Prime'; }
 
@@ -101,7 +106,7 @@
 
     <div class="social-sidebar">
         <a href="https://www.instagram.com/barisbaltamusic/" target="_blank"><i class="fab fa-instagram"></i></a>
-        <a href="https://open.spotify.com/artist/6oZyJw9Oe2PRMGiYB9zEaO?si=9WcE5j80RVK1RjK9JZ_2cw" target="_blank"><i class="fab fa-spotify"></i></a>
+        <a href="https://open.spotify.com/artist/YOUR_ARTIST_ID" target="_blank"><i class="fab fa-spotify"></i></a>
         <a href="https://www.tiktok.com/@barisbaltamusic?lang=en" target="_blank"><i class="fab fa-tiktok"></i></a>
         <a href="https://www.youtube.com/@barisbaltamusic" target="_blank"><i class="fab fa-youtube"></i></a>
         <a href="mailto:contact@barisbaltamusic.com"><i class="fas fa-envelope"></i></a>
@@ -110,8 +115,12 @@
     <div class="right-sidebar">
         
         <div class="media-box">
-            <span class="media-label">SPOTIFY: ARTIST PROFILE</span>
-            <iframe style="border-radius:12px" src="https://open.spotify.com/embed/artist/4Z8W4fKeB5YxbusRsdQVPb?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            <span class="media-label">SPOTIFY: BARIS BALTA</span>
+            <iframe style="border-radius:12px" 
+                    src="https://open.spotify.com/embed/artist/6oZyJw9Oe2PRMGiYB9zEaO?utm_source=generator"
+                    width="100%" height="152" frameBorder="0" allowfullscreen="" 
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
+            </iframe>
         </div>
 
         <div class="media-box">
@@ -134,48 +143,55 @@
 
     <script>
         // --- 1. RANDOM YOUTUBE VIDEO LOADER ---
-        // This list contains ONLY your specific videos. Add more IDs here to grow the list.
+        // I have added your specific video IDs here. It will pick one automatically.
         const myVideos = [
-            "5SrOcDLuFKM", // By Your Side
-            "QY9SVLBlcHo", // Planetary Motion
-            "Lu14zR735VI", // Crazy (Latest)
-            "DjDcEhVCKa0"  // Muon
-            "bVReVcI3qJ8", // Alpha Live Session I
-            "EZUF_Otllq4", // Alpha Live Session III
+            "Lu14zR735VI", // Crazy
+            "bVReVcI3qJ8", // Alpha Live I
+            "EZUF_Otllq4", // Alpha Live III
             "68Fv2EHbUdA", // Positron
             "DjDcEhVCKa0"  // Muon
-            "E5mbCgCVI54" // Glory Box (Baris Balta Unofficial Remix 
         ];
         
-        // Pick a random video from the list
-        const randomVideoID = myVideos[Math.floor(Math.random() * myVideos.length)];
-        
-        // Apply it to the player
-        document.getElementById('yt-player').src = `https://www.youtube.com/embed/${randomVideoID}?si=mute=1`;
-
+        // This function runs immediately to load a video
+        (function loadRandomVideo() {
+            const randomID = myVideos[Math.floor(Math.random() * myVideos.length)];
+            const player = document.getElementById('yt-player');
+            if(player) {
+                player.src = `https://www.youtube.com/embed/${randomID}?si=mute=1`;
+                console.log("Loaded Random Video:", randomID);
+            }
+        })();
 
         // --- 2. MENU LOGIC ---
         function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
 
-        // --- 3. AUDIO ENGINE (NO ATMOSPHERE NOISE) ---
+        // --- 3. AUDIO ENGINE ---
         let audioStarted = false;
         const startBtn = document.getElementById('startBtn');
         const bgImage = document.getElementById('bg-image');
 
+        // Initialize Sampler
         const sampler = new Tone.Sampler({
             urls: { "C4": "kick.mp3", "D4": "snare.mp3" },
             baseUrl: "https://tonejs.github.io/audio/drum-samples/acoustic-kit/",
             onload: () => { console.log("Samples Loaded!"); }
         }).toDestination();
 
-        // START BUTTON
+        // START BUTTON (FIXED SEQUENCER LOGIC)
         startBtn.addEventListener('click', async () => {
             if (audioStarted) return;
+            
+            // 1. Start Audio Context
             await Tone.start();
             audioStarted = true;
+            
+            // 2. Hide Button
             startBtn.style.display = 'none';
+            
+            // 3. START THE TRANSPORT (Crucial Fix for Sequencer)
             Tone.Transport.bpm.value = 120;
             Tone.Transport.start();
+            console.log("Audio Engine Started");
         });
 
         // SCROLL EFFECT (VISUAL ONLY)
@@ -199,6 +215,7 @@
                 step.addEventListener('click', () => {
                     patternArray[i] = !patternArray[i];
                     step.classList.toggle('active');
+                    // Play sound immediately on click if engine is started
                     if(patternArray[i] && audioStarted) sampler.triggerAttack(note);
                 });
                 container.appendChild(step);
@@ -215,8 +232,8 @@
             
             Tone.Draw.schedule(() => {
                 document.querySelectorAll('.step').forEach(s => s.classList.remove('playing'));
-                kickGrid.children[currentStep].classList.add('playing');
-                snareGrid.children[currentStep].classList.add('playing');
+                if(kickGrid.children[currentStep]) kickGrid.children[currentStep].classList.add('playing');
+                if(snareGrid.children[currentStep]) snareGrid.children[currentStep].classList.add('playing');
             }, time);
 
             currentStep = (currentStep + 1) % 8;
