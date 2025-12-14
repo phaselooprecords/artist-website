@@ -3,191 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baris Balta | Interactive Experience</title>
+    <title>Baris Balta | Music Production</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Montserrat:wght@400;700&family=Courier+Prime&display=swap" rel="stylesheet">
 
     <style>
-        /* --- GLOBAL STYLES --- */
+        /* --- GLOBAL & LAYOUT --- */
         body {
             margin: 0;
             padding: 0;
             background-color: #000;
             color: white;
-            font-family: 'Courier Prime', monospace;
+            font-family: 'Montserrat', sans-serif;
             overflow-x: hidden;
         }
 
-        /* --- BACKGROUND IMAGE (Adjusted position) --- */
+        /* --- BACKGROUND IMAGE --- */
         #bg-image {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* REPLACE THIS WITH YOUR IMAGE PATH (e.g., 'me.png') */
+            top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('https://media-assets-blush.vercel.app/profile.png'); 
             background-size: cover;
-            /* MOVES IMAGE DOWN SO FACE IS VISIBLE */
-            background-position: center 30%; 
+            /* MOVED DOWN per request so face is visible */
+            background-position: center 40%; 
             opacity: 0.8;
             z-index: -1;
-            transition: filter 0.5s ease;
+            transition: filter 0.5s ease, transform 0.2s;
         }
 
-        /* --- TOP LEFT MENU --- */
+        /* --- TOP LEFT: MENU --- */
         .menu-toggle {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            font-size: 2rem;
-            cursor: pointer;
-            z-index: 100;
-            color: white; /* White icon to contrast with dark background elements */
-            mix-blend-mode: difference;
+            position: fixed; top: 30px; left: 30px;
+            font-size: 2rem; cursor: pointer; z-index: 100;
+            color: white; mix-blend-mode: difference;
         }
-        
         .menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 99;
-            opacity: 0;
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 99; opacity: 0; pointer-events: none;
             transition: opacity 0.3s ease;
         }
         .menu-overlay.open { opacity: 1; pointer-events: all; }
         .menu-overlay a {
-            color: white;
-            text-decoration: none;
-            font-size: 2rem;
-            margin: 15px;
-            font-family: 'Montserrat', sans-serif;
-            text-transform: uppercase;
+            color: white; text-decoration: none; font-size: 2rem;
+            margin: 15px; font-family: 'Orbitron', sans-serif; text-transform: uppercase;
         }
-        .menu-overlay a:hover { color: #f00; }
+        .menu-overlay a:hover { color: #f00; letter-spacing: 5px; transition: 0.3s; }
+
+        /* --- TOP RIGHT: WEATHER & TIME WIDGET --- */
+        .status-widget {
+            position: fixed; top: 30px; right: 30px;
+            text-align: right; z-index: 20;
+            font-family: 'Courier Prime', monospace;
+            background: rgba(0,0,0,0.4); /* Transparent dark bg */
+            padding: 15px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+        }
+        .time-display { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .weather-display { font-size: 0.9rem; color: #ccc; margin-top: 5px; }
+
+        /* --- RIGHT SIDE: NEWS TICKER & MEDIA --- */
+        .right-sidebar {
+            position: fixed; right: 30px; top: 50%;
+            transform: translateY(-50%); width: 320px;
+            display: flex; flex-direction: column; gap: 15px; z-index: 10;
+        }
+
+        /* NEWS TICKER */
+        .news-ticker {
+            background: rgba(255, 0, 0, 0.8);
+            color: white; padding: 10px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.8rem; border-radius: 5px;
+            white-space: nowrap; overflow: hidden;
+            border: 1px solid white;
+        }
+
+        /* MEDIA CONTAINER */
+        .media-box {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .media-label { font-size: 0.7rem; color: #888; letter-spacing: 2px; margin-bottom: 10px; display: block; }
 
         /* --- LEFT SIDE: SOCIAL ICONS --- */
         .social-sidebar {
-            position: fixed;
-            left: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 10;
+            position: fixed; left: 30px; top: 50%;
+            transform: translateY(-50%); display: flex; flex-direction: column; gap: 25px; z-index: 10;
         }
         .social-sidebar a {
-            color: white;
-            font-size: 1.5rem;
-            opacity: 0.7;
-            transition: transform 0.2s, opacity 0.2s;
+            color: white; font-size: 1.8rem; opacity: 0.6;
+            transition: all 0.2s; filter: drop-shadow(0 0 5px black);
         }
-        .social-sidebar a:hover { opacity: 1; transform: scale(1.2); color: #ff4d4d; }
+        .social-sidebar a:hover { opacity: 1; transform: scale(1.2); color: #ff3333; }
 
-        /* --- RIGHT SIDE: MUSIC PLAYER & VIDEO --- */
-        .media-sidebar {
-            position: fixed;
-            right: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 10;
-            /* Glassmorphism Effect */
-            background: rgba(0, 0, 0, 0.4); 
-            backdrop-filter: blur(5px);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        iframe { border-radius: 12px; border: none; }
-
-        /* --- CENTER HERO SECTION --- */
+        /* --- CENTER HERO --- */
         .hero {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            /* Offset slightly to account for sidebars */
-            padding: 0 100px; 
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 0 50px;
         }
 
-        /* SHARPER, COOLER FONT, DARK COLOR */
+        /* NEW SHARP FONT STYLE */
         h1.artist-name { 
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
-            font-size: 5rem; 
-            margin: 0; 
-            letter-spacing: -2px; 
-            text-transform: uppercase; 
-            /* Dark color as requested */
-            color: #0a0a0a; 
-            /* Subtle white outline so it pops on dark/red background */
-            text-shadow: 2px 2px 0px rgba(255,255,255,0.3);
-            line-height: 0.9;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900; font-size: 5rem; margin: 0; 
+            letter-spacing: -3px; text-transform: uppercase; 
+            /* Dark fill with light stroke */
+            color: #050505; 
+            -webkit-text-stroke: 2px rgba(255,255,255,0.8);
+            text-shadow: 0px 0px 20px rgba(255,255,255,0.2);
         }
 
+        /* TYPEWRITER TEXT */
         .tagline { 
-            font-size: 1.2rem; 
-            margin-top: 15px; 
-            color: #fff; 
-            background: rgba(0,0,0,0.5);
-            padding: 5px 15px;
-            letter-spacing: 2px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 1.1rem; margin-top: 20px; 
+            color: #fff; background: rgba(0,0,0,0.7);
+            padding: 5px 10px; display: inline-block;
+            min-height: 1.5em; /* Prevents jumping */
         }
+        .cursor { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
         .start-btn {
-            margin-top: 40px;
-            padding: 15px 40px;
-            border: 2px solid white;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            font-size: 1rem;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
+            margin-top: 40px; padding: 15px 50px;
+            border: 2px solid white; background: transparent;
+            color: white; font-family: 'Orbitron', sans-serif;
+            font-weight: 700; cursor: pointer; transition: all 0.3s;
+            letter-spacing: 2px;
         }
-        .start-btn:hover { background: white; color: black; }
+        .start-btn:hover { background: white; color: black; box-shadow: 0 0 20px white; }
 
-        /* --- SEQUENCER (Below Fold) --- */
+        /* --- SEQUENCER (Scroll Section) --- */
         .sequencer-section {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(to top, #000 10%, rgba(0,0,0,0.8));
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: linear-gradient(to top, #000 10%, rgba(0,0,0,0.9));
         }
-        
         .sequencer-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin-bottom: 20px; }
-        .step { width: 40px; height: 60px; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; border-radius: 4px; }
-        .step.active { background-color: #ff4d4d; box-shadow: 0 0 15px #ff4d4d; }
-        .step.playing { transform: scale(1.1); border-color: white; }
+        .step { width: 40px; height: 60px; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; border-radius: 2px; }
+        .step.active { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
+        .step.playing { border-color: white; transform: scale(1.1); }
 
-        /* Hides sidebars on small mobile screens to prevent clutter */
-        @media (max-width: 768px) {
-            .social-sidebar, .media-sidebar { display: none; }
-            h1.artist-name { font-size: 3rem; }
-            .hero { padding: 0 20px; }
+        /* MOBILE FIXES */
+        @media (max-width: 900px) {
+            .social-sidebar, .right-sidebar, .status-widget { display: none; }
+            h1.artist-name { font-size: 3rem; -webkit-text-stroke: 1px white; }
         }
     </style>
 </head>
@@ -195,112 +166,184 @@
 
     <div id="bg-image"></div>
 
-    <div class="menu-toggle" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
+    <div class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
     <div class="menu-overlay" id="menuOverlay">
-        <a href="#" onclick="toggleMenu()">Close</a>
-        <a href="#production">Music Production</a>
-        <a href="#engineering">Audio Engineering</a>
-        <a href="#contact">Contact</a>
+        <a href="#" onclick="toggleMenu()">Close X</a>
+        <a href="#">Music Production</a>
+        <a href="#">Audio Engineering</a>
+        <a href="#">Social Media Services</a>
+        <a href="#">Contact</a>
+    </div>
+
+    <div class="status-widget">
+        <div class="time-display" id="timeDisplay">00:00</div>
+        <div class="weather-display" id="weatherDisplay">Locating...</div>
     </div>
 
     <div class="social-sidebar">
-        <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
-        <a href="https://spotify.com" target="_blank"><i class="fab fa-spotify"></i></a>
-        <a href="https://tiktok.com" target="_blank"><i class="fab fa-tiktok"></i></a>
-        <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
-        <a href="mailto:contact@barisbaltamusic.com"><i class="fas fa-envelope"></i></a>
+        <a href="https://www.instagram.com/barisbaltamusic/" target="_blank"><i class="fab fa-instagram"></i></a>
+        <a href="https://open.spotify.com/artist/YOUR_ARTIST_ID_HERE" target="_blank"><i class="fab fa-spotify"></i></a>
+        <a href="https://www.tiktok.com/@barisbaltamusic?lang=en" target="_blank"><i class="fab fa-tiktok"></i></a>
+        <a href="https://www.youtube.com/@barisbaltamusic" target="_blank"><i class="fab fa-youtube"></i></a>
+        <a href="https://www.labelradar.com/artists/BarisBalta/profile" target="_blank"><i class="fas fa-satellite-dish"></i></a> <a href="mailto:contact@barisbaltamusic.com"><i class="fas fa-envelope"></i></a>
     </div>
 
-    <div class="media-sidebar">
-        <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX68H8ZujdnN7?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    <div class="right-sidebar">
+        <div class="news-ticker">
+            <span id="newsText">LATEST NEWS: STUDIO UPDATE LOADING...</span>
+        </div>
+
+        <div class="media-box">
+            <span class="media-label">NOW PLAYING</span>
+            <iframe style="border-radius:12px" src="https://open.spotify.com/embed/artist/4Z8W4fKeB5YxbusRsdQVPb?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>
+
+        <div class="media-box">
+            <span class="media-label">LATEST VISUALS</span>
+            <iframe width="100%" height="160" src="https://www.youtube.com/embed/videoseries?list=UUbarisbaltamusic" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1 class="artist-name">BARIS BALTA</h1>
+        <div class="tagline"><span id="typewriter"></span><span class="cursor">|</span></div>
         
-        <iframe width="100%" height="160" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=mute=1" title="Latest Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-        <p style="text-align:center; font-size:0.8rem; margin:0;">LATEST LIVE SET</p>
+        <button class="start-btn" id="startBtn">INITIALIZE SYSTEM</button>
+        <p style="font-size: 0.8rem; margin-top: 50px; opacity: 0.6; font-family:'Courier Prime'">SCROLL TO CHANGE FREQUENCY</p>
     </div>
 
-    <div class="container">
-        <div class="hero">
-            <h1 class="artist-name">BARIS BALTA</h1>
-            <p class="tagline">Music Producer // Audio Engineer</p>
-            
-            <button class="start-btn" id="startBtn">INITIALIZE AUDIO ENGINE</button>
-            <p style="font-size: 0.8rem; margin-top: 50px; opacity: 0.6;">SCROLL DOWN TO MIX</p>
-        </div>
-
-        <div class="sequencer-section">
-            <h2>SEQUENCER LOOP</h2>
-            <div style="text-align:center; margin-bottom:10px;">KICK DRUM</div>
-            <div class="sequencer-grid" id="grid-kick"></div>
-            
-            <div style="text-align:center; margin-bottom:10px; margin-top:20px;">SNARE</div>
-            <div class="sequencer-grid" id="grid-snare"></div>
-        </div>
+    <div class="sequencer-section">
+        <h2>LIVE SEQUENCER</h2>
+        <div class="sequencer-grid" id="grid-kick"></div>
+        <div class="sequencer-grid" id="grid-snare"></div>
     </div>
 
     <script>
-        // --- MENU TOGGLE ---
-        function toggleMenu() {
-            document.getElementById('menuOverlay').classList.toggle('open');
+        // --- 1. MENU ---
+        function toggleMenu() { document.getElementById('menuOverlay').classList.toggle('open'); }
+
+        // --- 2. TIME & WEATHER ---
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('timeDisplay').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Simple Weather (Uses Open-Meteo based on browser location)
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+                .then(response => response.json())
+                .then(data => {
+                    const temp = data.current_weather.temperature;
+                    document.getElementById('weatherDisplay').innerText = `${temp}°C | Local Signal Active`;
+                })
+                .catch(() => { document.getElementById('weatherDisplay').innerText = "Signal Lost"; });
+            });
         }
 
-        // --- AUDIO ENGINE ---
+        // --- 3. NEWS TICKER ---
+        const newsItems = [
+            "NEW RELEASE 'THE LOW END THEORY' OUT NOW ON SPOTIFY",
+            "UPCOMING GIG: ISTANBUL UNDERGROUND - DEC 24",
+            "STUDIO SESSION BOOKINGS NOW OPEN FOR 2026",
+            "CHECK OUT THE NEW YOUTUBE BREAKDOWN ON ANALOG SYNTHS"
+        ];
+        let newsIndex = 0;
+        setInterval(() => {
+            newsIndex = (newsIndex + 1) % newsItems.length;
+            document.getElementById('newsText').innerText = "/// NEWS: " + newsItems[newsIndex];
+        }, 10000); // Updates every 10 seconds
+
+        // --- 4. TYPEWRITER EFFECT ---
+        const phrases = [
+            "Music Producer // Audio Engineer",
+            "Crafting Sonic Landscapes...",
+            "Analog Warmth in a Digital World.",
+            "Let's Make Something Timeless."
+        ];
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typeTarget = document.getElementById('typewriter');
+
+        function typeLoop() {
+            const currentPhrase = phrases[phraseIndex];
+            if (isDeleting) {
+                typeTarget.innerText = currentPhrase.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typeTarget.innerText = currentPhrase.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 100;
+
+            if (!isDeleting && charIndex === currentPhrase.length) {
+                typeSpeed = 2000; // Pause at end
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                typeSpeed = 500;
+            }
+            setTimeout(typeLoop, typeSpeed);
+        }
+        typeLoop();
+
+        // --- 5. AUDIO ENGINE & SCROLL LOGIC ---
         let audioStarted = false;
         const startBtn = document.getElementById('startBtn');
         const bgImage = document.getElementById('bg-image');
 
-        /* REPLACE THESE URLS WITH YOUR CUSTOM MP3s 
-           Ensure kick.mp3, snare.mp3 etc are in your 'public' folder
-        */
+        // Create Instruments
         const sampler = new Tone.Sampler({
-            urls: {
-                "C4": "kick.mp3",  
-                "D4": "snare.mp3", 
-                "E4": "hihat.mp3", 
-                "F4": "tom.mp3"    
-            },
-            // Using a fallback URL just in case you haven't uploaded files yet. 
-            // Delete 'baseUrl' line below to force use of your local files.
-            baseUrl: "https://tonejs.github.io/audio/drum-samples/acoustic-kit/",
-            onload: () => {
-                console.log("Samples Loaded!");
-                startBtn.innerText = "CLICK TO ENTER";
-            }
+            urls: { "C4": "kick.mp3", "D4": "snare.mp3" },
+            baseUrl: "https://tonejs.github.io/audio/drum-samples/acoustic-kit/"
         }).toDestination();
 
-        // Background Atmosphere
-        const bgSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: "sine" },
-            envelope: { attack: 2, decay: 0.1, sustain: 0.3, release: 2 }
-        }).toDestination();
-        bgSynth.volume.value = -15;
+        // Two Synths for Scroll Crossfading
+        const synthA = new Tone.Oscillator("C2", "sine").toDestination().start();
+        const synthB = new Tone.Oscillator("G2", "sawtooth").toDestination().start();
+        
+        // Mute initially
+        synthA.volume.value = -Infinity;
+        synthB.volume.value = -Infinity;
 
-        // START BUTTON
         startBtn.addEventListener('click', async () => {
             if (audioStarted) return;
             await Tone.start();
             audioStarted = true;
-            startBtn.style.display = 'none'; 
-            
-            // Play Intro Sound
-            bgSynth.triggerAttackRelease(["C2", "G2"], "2n");
-            
-            Tone.Transport.bpm.value = 120;
+            startBtn.style.display = 'none';
+            // Start Synth A (Base Layer)
+            synthA.volume.rampTo(-10, 1);
             Tone.Transport.start();
         });
 
-        // SCROLL EFFECTS
+        // SCROLL LISTENER (Changes Sound)
         window.addEventListener('scroll', () => {
+            if(!audioStarted) return;
             const scrollPercent = Math.min(window.scrollY / window.innerHeight, 1);
-            // Blur background on scroll
-            bgImage.style.filter = `blur(${scrollPercent * 10}px)`;
+            
+            // Move Background
+            bgImage.style.transform = `translateY(${scrollPercent * 50}px)`;
+
+            // Crossfade Audio: Top = Sine Wave, Bottom = Sawtooth Wave
+            // Simple mapping logic
+            const volA = -10 - (scrollPercent * 20); // Gets quieter
+            const volB = -30 + (scrollPercent * 20); // Gets louder
+
+            synthA.volume.rampTo(volA, 0.1);
+            synthB.volume.rampTo(volB > -10 ? -10 : volB, 0.1);
         });
 
-        // SEQUENCER LOGIC
+        // --- 6. SEQUENCER LOGIC ---
         const kickGrid = document.getElementById('grid-kick');
         const snareGrid = document.getElementById('grid-snare');
-        let kickPattern = [1, 0, 0, 0, 1, 0, 0, 0]; // Default beat
+        let kickPattern = [1, 0, 0, 0, 1, 0, 0, 0]; 
         let snarePattern = [0, 0, 1, 0, 0, 0, 1, 0];
 
         function createGrid(container, patternArray, note) {
@@ -308,17 +351,14 @@
                 const step = document.createElement('div');
                 step.classList.add('step');
                 if(patternArray[i]) step.classList.add('active');
-                
                 step.addEventListener('click', () => {
                     patternArray[i] = !patternArray[i];
                     step.classList.toggle('active');
-                    // Preview sound on click
                     if(patternArray[i] && audioStarted) sampler.triggerAttack(note);
                 });
                 container.appendChild(step);
             }
         }
-
         createGrid(kickGrid, kickPattern, "C4");
         createGrid(snareGrid, snarePattern, "D4");
 
@@ -326,13 +366,12 @@
         Tone.Transport.scheduleRepeat((time) => {
             if (kickPattern[currentStep]) sampler.triggerAttack("C4", time);
             if (snarePattern[currentStep]) sampler.triggerAttack("D4", time);
-
+            
             Tone.Draw.schedule(() => {
                 document.querySelectorAll('.step').forEach(s => s.classList.remove('playing'));
                 kickGrid.children[currentStep].classList.add('playing');
                 snareGrid.children[currentStep].classList.add('playing');
             }, time);
-
             currentStep = (currentStep + 1) % 8;
         }, "8n");
     </script>
